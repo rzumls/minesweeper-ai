@@ -14,7 +14,7 @@ class Minesweeper:
         self.game_over = False
 
     def create_board(self, x, y, mines): 
-        self.x = x 
+        self.x = x
         self.y = y
         self.mines = mines
         self.player_total_spaces = (self.x * self.y)
@@ -116,14 +116,14 @@ class Minesweeper:
         """ 
         """
         flag = False
-        self.create_board(5, 5, 2)
+        self.create_board(16, 16, 40) 
         x, y, res = self.set_board() 
         self.tiles.remove((x,y)) 
-        self.print_board()
+        # self.print_board()
 
         AI_ = My_AI(self.x, self.y, self.mines, self.player_board, x, y)
 
-        while self.game_over is False and self.flagged_mines != self.mines: 
+        while self.game_over is False and len(self.tiles) != self.mines: 
             if manual: 
                 user_input = input().strip().split() 
                 if len(user_input) == 3: 
@@ -150,14 +150,16 @@ class Minesweeper:
                 self.game_over = True
 
             flag = False
-            self.print_board()
+            # self.print_board()
         
         if self.game_over:
-            self.print_board(False)
-            print("Game over.") 
+            #self.print_board(False)
+            #print("Game over.") 
+            return False 
         else:
-            self.print_board() 
-            print("You win!") 
-        return
+            #self.print_board() 
+            #print("You win!") 
+            return True
+
 
 
