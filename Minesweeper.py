@@ -1,12 +1,6 @@
-from Constants import Constants
 from AI import My_AI
-import random 
-import os
-
-
-def clear_console(): 
-    clear = lambda: os.system('cls')
-    return clear() 
+from Constants import *
+import random
 
 class Minesweeper: 
     def __init__(self): 
@@ -43,8 +37,8 @@ class Minesweeper:
             r_row = random.randrange(self.x) 
             r_col = random.randrange(self.y) 
 
-            if self.real_board[r_row][r_col] != Constants.MINE: 
-                self.real_board[r_row][r_col] = Constants.MINE
+            if self.real_board[r_row][r_col] != Constants_.MINE: 
+                self.real_board[r_row][r_col] = Constants_.MINE
                 count_mines += 1
             else: 
                 continue
@@ -52,7 +46,7 @@ class Minesweeper:
         # For each tile, check adjacent mines, set equal to # of mines
         for r in range(self.x): 
             for c in range(self.y): 
-                if self.real_board[r][c] == Constants.MINE: 
+                if self.real_board[r][c] == Constants_.MINE: 
                     continue 
 
                 mine_count = 0 
@@ -61,7 +55,7 @@ class Minesweeper:
                     col_dir = c + d[1] 
                     if row_dir >= 0 and row_dir < self.x and \
                         col_dir >= 0 and col_dir < self.y: 
-                        if self.real_board[row_dir][col_dir] == Constants.MINE: 
+                        if self.real_board[row_dir][col_dir] == Constants_.MINE: 
                             mine_count += 1
                 
                 self.real_board[r][c] = str(mine_count)
@@ -102,22 +96,19 @@ class Minesweeper:
         start_r = random.randrange(self.x) 
         start_c = random.randrange(self.y) 
 
-        while self.real_board[start_r][start_c] != Constants.ZERO_TILE: 
+        while self.real_board[start_r][start_c] != Constants_.ZERO_TILE: 
             start_r = random.randrange(self.x) 
             start_c = random.randrange(self.y) 
 
         return (start_r, start_c, self.real_board[start_r][start_c]) 
-        
-    def is_valid_user_move(self, user_input): 
-        ...
     
     def is_valid_move(self, flag, x, y): 
         if (
             flag is False and 
-            self.real_board[x][y] != Constants.MINE
+            self.real_board[x][y] != Constants_.MINE
         ): 
             return True
-        elif flag == Constants.FLAG or flag == Constants.UNFLAG: 
+        elif flag == Constants_.FLAG or flag == Constants_.UNFLAG: 
             return True
         return False
 
@@ -125,25 +116,23 @@ class Minesweeper:
         """ 
         """
         flag = False
-        self.create_board(3, 3, 1)
+        self.create_board(5, 5, 2)
         x, y, res = self.set_board() 
         self.tiles.remove((x,y)) 
         self.print_board()
 
-        if manual is False: 
-            AI = My_AI(self.x, self.y, self.mines, self.player_board)
-            
+        AI_ = My_AI(self.x, self.y, self.mines, self.player_board, x, y)
+
         while self.game_over is False and self.flagged_mines != self.mines: 
             if manual: 
                 user_input = input().strip().split() 
-
                 if len(user_input) == 3: 
                     flag, x, y = user_input
                 else: 
                     x, y = user_input       
-                     
-            elif manual is False: 
-                x, y = AI.play_move(x, y, res) 
+
+            if manual is False: 
+                x, y = AI_.play_move(res) 
 
             x, y = int(x), int(y) 
             if self.is_valid_move(flag, x, y): 
@@ -151,12 +140,12 @@ class Minesweeper:
                     res = self.real_board[x][y] 
                     self.player_board[x][y] = res 
                     self.tiles.remove((x,y)) 
-                elif flag == Constants.UNFLAG: 
-                    self.player_board[x][y] == Constants.SPACE
-                elif flag == Constants.FLAG:  
-                    if self.real_board[x][y] == Constants.MINE: 
+                elif flag == Constants_.UNFLAG: 
+                    self.player_board[x][y] == Constants_.SPACE
+                elif flag == Constants_.FLAG:  
+                    if self.real_board[x][y] == Constants_.MINE: 
                         self.flagged_mines += 1
-                    self.player_board[x][y] = Constants.FLAG
+                    self.player_board[x][y] = Constants_.FLAG
             else:
                 self.game_over = True
 
@@ -170,3 +159,5 @@ class Minesweeper:
             self.print_board() 
             print("You win!") 
         return
+
+
