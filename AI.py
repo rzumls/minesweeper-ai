@@ -101,6 +101,7 @@ class My_AI():
 
         return progress
     
+    # are_consecutive maybe can replace this 
     def check_pair(self, a, b): 
         ax, ay = a
         if (
@@ -190,6 +191,9 @@ class My_AI():
         return tile_neighbor, total_neighbors
 
     def make_a_b(self, tile_neighbor, total_neighbors):
+        """ 
+        Make the A, B matrices for CSP
+        """
         A, B = [], [] 
         n = len(total_neighbors) 
 
@@ -209,6 +213,11 @@ class My_AI():
         return A, B
 
     def solve_for_x(self, A, B, n): 
+        """ 
+        Produce combination of [0,1] for size n of A, B matrices
+        to find answer to A @ x = B.
+        Takes long since it finds every combinations and tries it
+        """
         solution = [] 
 
         binary_combinations = product([0,1], repeat=n)
@@ -276,6 +285,8 @@ class My_AI():
 
         while len(self.mines) != self.mines_count: 
             # self.print_board() 
+            # // -------------------------------------
+            # Deterministic -> find safe tiles based on flagged + unflagged neighbors
             if self.safe_frontier: 
                 return self.play_safe_frontier() 
             elif self.check_unsafe_tiles(): 
@@ -289,6 +300,8 @@ class My_AI():
                 else:
                     # // ---------------------------------------------------
                     # Constraint Satisfaction Problem
+                    # get subgroups of 3, if more than 1 solution -> find commonalities
+                    # else, get subgroups of 2 from the 3, helps for 1-1 mines or 1-2
                     subgroups = self.get_subgroups(self.unsure_frontier, 3)
                     for group in subgroups: 
                         if self.csp(group, 3):
@@ -298,11 +311,19 @@ class My_AI():
                         # Smart Random 
                         # corners best guess -> edges -> use probability 
 
+                        # GOAL: create different mine arrangements and find probability 
+
                         tiles_ = list(self.tiles) 
 
                         corners = [i for i in tiles_ if (
-                            i[0] == self.row - 1 and
-                            i[1] == self.col -1 
+                            (i[0] == self.row - 1 and
+                            i[1] == self.col - 1) or 
+                            (i[0] == 0 and
+                             i[1] == 0) or 
+                            (i[0] == 0 and
+                             i[1] == self.col - 1) or
+                            (i[0] == self.row - 1 and
+                             i[1] == 0)
                         )]
 
                         edges = [i for i in tiles_ if (
@@ -320,37 +341,9 @@ class My_AI():
 
                         self.safe_frontier.append(random_) 
                         continue 
+        
 
         self.add_safe_tiles(self.tiles) 
 
         if self.safe_frontier:
             return self.play_safe_frontier()
-
-
-
-
-
-
-
-
-
-        
-                                
-                    
-                            
-                                
-
-
-                            
-
-                            
-
-
-
-                                    
-
-
-
-            
-        
-        
