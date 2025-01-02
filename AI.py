@@ -315,22 +315,18 @@ class My_AI():
 
                         tiles_ = list(self.tiles) 
 
-                        corners = [i for i in tiles_ if (
-                            (i[0] == self.row - 1 and
-                            i[1] == self.col - 1) or 
-                            (i[0] == 0 and
-                             i[1] == 0) or 
-                            (i[0] == 0 and
-                             i[1] == self.col - 1) or
-                            (i[0] == self.row - 1 and
-                             i[1] == 0)
-                        )]
-
-                        edges = [i for i in tiles_ if (
-                            i[0] == self.row - 1 or
-                            i[1] == self.col - 1 and 
-                            i not in corners 
-                        )] 
+                        corners = [] 
+                        edges = []
+                        for i in tiles_:
+                            if (
+                                (i[0] == self.row - 1 and i[1] == self.col - 1) or
+                                (i[0] == 0 and i[1] == 0) or
+                                (i[0] == 0 and i[1] == self.col - 1) or
+                                (i[0] == self.row - 1 and i[1] == 0)
+                            ):
+                                corners.append(i) 
+                            elif i[0] == self.row - 1 or i[1] == self.col - 1:
+                                edges.append(i)
 
                         if corners: 
                             random_ = random.choice(corners) 
@@ -338,7 +334,8 @@ class My_AI():
                             random_ = random.choice(edges) 
                         else: 
                             random_ = random.choice(list(self.tiles)) 
-
+                            
+                        print(f'Playing random move: {random_}') 
                         self.safe_frontier.append(random_) 
                         continue 
         

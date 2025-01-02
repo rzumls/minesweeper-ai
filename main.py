@@ -14,6 +14,9 @@ for i in range(1, 1001):
 end = time.time() 
 print(f'Ran for: {end - start:.2f} seconds')
 print(f'Won games: {c}, win percentage: {c / 1000 * 100}%')
+# 8x8 10 - (80.4, 79.2, 78.4)
+# 16x16 40 - (75.9, 74.3, )
+# 16x30 99 - 
 
 
 

@@ -31,12 +31,12 @@ def add_(tile):
 
 # set determination -> reveal 1-1 patterns, reveal other things
 # CSP -> 1-2-1, 1-2-2-1, 1-2
-
+""" 
 grid = [[ 1, ' ', ' '],
         [ 1, ' ', ' '],
         [ 1, ' ', ' ']
     ]
-
+ """
 unsure_frontier = [(0,0), (1,0), (2,0)]
 
 def csp(grid, frontier): 
@@ -110,6 +110,122 @@ def csp(grid, frontier):
     # check what indexes are in common with solution
     # if 0 is common -> tile is safe
     # if 1 is common -> tile is a mine
-    
 
-csp(grid, unsure_frontier)
+# // --------------------------------------------------------------
+grid = [
+    [' ', ' ', ' ', ' ', ' '],
+    [' ',  1,   1,   1,  ' '],
+    [' ', ' ', ' ', ' ', ' ']
+]
+
+n, m = len(grid), len(grid[0]) 
+unsure = [(1,1), (1,2), (1,3)]
+
+def get_edge_cells(frontier): 
+    edge_cells = [] 
+
+    for tile in frontier: 
+        x, y = tile 
+
+        for dir in directions: 
+            xd, yd = x + dir[0], y + dir[1] 
+
+            if (
+                xd >= 0 and xd < n and 
+                yd >= 0 and yd < m and 
+                grid[xd][yd] == ' '
+            ): 
+                if (xd, yd) not in edge_cells: 
+                    edge_cells.append((xd, yd)) 
+            else: 
+                continue
+    
+    return edge_cells
+
+def add_numn(mine): 
+    x, y = mine
+    neighbors = [] 
+
+    for d in directions: 
+        xd, yd = x + d[0], y + d[1] 
+
+        if ( 
+            xd >= 0 and xd < n and
+            yd >= 0 and yd < m and 
+            type(grid[xd][yd]) == int
+        ): 
+            if grid[xd][yd] not in neighbors: 
+                neighbors.append((xd, yd)) 
+    
+    return neighbors 
+
+def valid_mine(grid, mine): 
+    neighbors = add_numn(mine)
+
+    for tile in neighbors: 
+        flag_count, _ = add_(tile) 
+        if flag_count > grid[tile[0]][tile[1]]:
+            return False 
+    
+    return True 
+
+def valid_arrangement(grid): 
+    for i in range(n): 
+        for j in range(m): 
+            if type(grid[i][j]) == int: 
+                flag_c, _ = add_((i, j))
+
+                if flag_c != grid[i][j]: 
+                    return False
+    
+    return True
+
+edge_cells = get_edge_cells(unsure)
+edge_cells.sort()  
+
+def mine_arrangements(unsure_): 
+    # get all edge cells, ones that border a number
+    # for each edge, iterate through function to recursively
+    # check if that edge can be mine or not
+
+    # WIP -- modify for number of mines left 
+    arrangements = set() 
+
+    def make_arrangements(grid, mines, idx):
+        x, y = edge_cells[idx] 
+        grid_ = grid.copy() 
+
+        if idx == len(mines) - 1: 
+            if valid_arrangement(grid_): 
+                arrangements.add(tuple(mines)) 
+        else: 
+            grid_[x][y] = 'F' 
+            mines[idx] = True
+
+            if valid_mine(grid_, (x, y)): 
+                make_arrangements(grid_, mines, idx + 1) 
+            
+            grid[x][y] = ' ' 
+            mines[idx] = False
+            make_arrangements(grid_, mines, idx + 1) 
+    
+    make_arrangements(grid, [False] * len(edge_cells), 0) 
+
+    return arrangements
+
+x = mine_arrangements(unsure)
+print(x) 
+from collections import Counter
+
+mines_prob = dict() 
+for i in edge_cells: 
+    mines_prob[i] = 0 
+
+total = len(x) 
+
+for arr in x: 
+    for i in range(len(arr)): 
+        if arr[i] == True: 
+            mines_prob[edge_cells[i]] += 1
+
+print(mines_prob) 
