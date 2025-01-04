@@ -1,5 +1,6 @@
-import numpy as np
 from itertools import product, combinations
+from math import comb
+import numpy as np 
 
 # Constraint Satisfaction Problem
 # // ---------------------------------------------------------
@@ -112,14 +113,14 @@ def csp(grid, frontier):
     # if 1 is common -> tile is a mine
 
 # // --------------------------------------------------------------
-grid = [
-    [' ', ' ', ' ', ' ', ' '],
-    [' ',  1,   1,   1,  ' '],
-    [' ', ' ', ' ', ' ', ' ']
+# PROBABILITY WORKS - IMPLEMEN WITH MINESWEEPER CAN JUST USE THIS 
+grid = [[ 0,   0,   1, ' '],
+        [ 1,   1,   2, ' '],
+        [' ', ' ', ' ', ' '],
 ]
 
 n, m = len(grid), len(grid[0]) 
-unsure = [(1,1), (1,2), (1,3)]
+unsure = [(0,2), (1,0), (1,1), (1,2)]
 
 def get_edge_cells(frontier): 
     edge_cells = [] 
@@ -169,15 +170,13 @@ def valid_mine(grid, mine):
     
     return True 
 
-def valid_arrangement(grid): 
-    for i in range(n): 
-        for j in range(m): 
-            if type(grid[i][j]) == int: 
-                flag_c, _ = add_((i, j))
+def valid_arrangement(grid, frontier): 
+    for tile in frontier: 
+        i, j = tile 
+        flag_c, _ = add_((i, j))
+        if flag_c != grid[i][j]: 
+            return False
 
-                if flag_c != grid[i][j]: 
-                    return False
-    
     return True
 
 edge_cells = get_edge_cells(unsure)
@@ -192,21 +191,26 @@ def mine_arrangements(unsure_):
     arrangements = set() 
 
     def make_arrangements(grid, mines, idx):
-        x, y = edge_cells[idx] 
         grid_ = grid.copy() 
 
-        if idx == len(mines) - 1: 
-            if valid_arrangement(grid_): 
+        if idx == len(mines):  
+            if valid_arrangement(grid_, unsure): 
                 arrangements.add(tuple(mines)) 
         else: 
+            x, y = edge_cells[idx] 
+            
             grid_[x][y] = 'F' 
             mines[idx] = True
 
+            # try to place mine here, check if valid 
+            # technically, does get valid mine placements 
+            # however, some tiles with values may not have mines 
             if valid_mine(grid_, (x, y)): 
                 make_arrangements(grid_, mines, idx + 1) 
             
             grid[x][y] = ' ' 
             mines[idx] = False
+            # try to not place mine here 
             make_arrangements(grid_, mines, idx + 1) 
     
     make_arrangements(grid, [False] * len(edge_cells), 0) 
@@ -214,18 +218,31 @@ def mine_arrangements(unsure_):
     return arrangements
 
 x = mine_arrangements(unsure)
-print(x) 
+
 from collections import Counter
 
 mines_prob = dict() 
 for i in edge_cells: 
-    mines_prob[i] = 0 
+    mines_prob[i] = 0
 
 total = len(x) 
-
+total_arrangements = 0 
 for arr in x: 
+    mines_count = 0
+
     for i in range(len(arr)): 
         if arr[i] == True: 
-            mines_prob[edge_cells[i]] += 1
+            mines_count += 1
 
-print(mines_prob) 
+    prob = comb(465, (99 - mines_count))
+    total_arrangements += prob 
+
+    for j in range(len(arr)):
+        if arr[j] == True: 
+            mines_prob[edge_cells[j]] += prob
+
+
+for k, v in mines_prob.items(): 
+    print(f'{k}: {v / total_arrangements * 100:2f}')
+
+print(f'total arrangements: {total}')

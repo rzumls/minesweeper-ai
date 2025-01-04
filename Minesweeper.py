@@ -116,7 +116,7 @@ class Minesweeper:
         """ 
         """
         flag = False
-        self.create_board(16, 30, 99) 
+        self.create_board(8, 8, 10)
         x, y, res = self.set_board() 
         self.tiles.remove((x,y)) 
         # self.print_board()
@@ -153,7 +153,7 @@ class Minesweeper:
             # self.print_board()
         
         if self.game_over:
-            print(f'Last move: ({x}, {y})')
+            #print(f'Last move: ({x}, {y})')
             #self.print_board(False)
             #print("Game over.") 
             return False 

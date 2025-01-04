@@ -27,17 +27,10 @@ class My_AI():
     def print_board(self): 
         # clear_console() 
         for i in range(self.row): 
-                print(f'{i} ', end = "") 
                 for items in self.board[i]: 
                     print(f'[{items}]', end = "") 
                 print() 
-
-        print("   ", end = "") 
     
-        for j in range(self.col): 
-            print(f'{str(j)}  ', end = "") 
-        print() 
-
     def add_neighbors(self, x, y): 
         flagged = set()
         unflagged = set()
@@ -59,9 +52,12 @@ class My_AI():
 
     def play_safe_frontier(self): 
         tile = self.safe_frontier.popleft() 
+        #print(f'Playing tile: {tile}')
+        #print(f'Safe frontier: {self.safe_frontier}') 
         self.tiles.remove(tile) 
+        #print(f'Removing tile: {tile}\n from: {self.tiles}')
+    
         self.cur_x, self.cur_y = tile[0], tile[1] 
-        #print(f'Playing tile: {tile}') 
         return tile 
 
     def add_safe_tiles(self, neighbors): 
@@ -73,6 +69,8 @@ class My_AI():
                 self.safe_frontier.append(tile) 
     
     def flag_unsafe_tiles(self, mines): 
+        progress = False
+
         for mine in mines: 
             if (
                 mine not in self.mines and
@@ -81,6 +79,9 @@ class My_AI():
                 self.mines.add(mine) 
                 self.tiles.remove(mine) 
                 self.board[mine[0]][mine[1]] = Constants_.FLAG
+                progress = True
+
+        return progress
                 
     def check_unsafe_tiles(self): 
         progress = False 
@@ -112,8 +113,41 @@ class My_AI():
         ): 
             return True 
         return False 
-        
+    
+    def set_pairs(self, a, b): 
+        ax, ay = a
+        bx, by = b
+
+        flag_a, unflag_a = self.add_neighbors(ax, ay) 
+        flag_b, unflag_b = self.add_neighbors(bx, by)
+
+        a_val = int(self.board[ax][ay]) - len(flag_a) 
+        b_val = int(self.board[bx][by]) - len(flag_b)
+
+        progress = False
+
+        if a_val - b_val == len(unflag_a - unflag_b): 
+            if self.flag_unsafe_tiles(unflag_a - unflag_b): 
+                progress = True
+            
+            if self.add_safe_tiles(unflag_b - unflag_a): 
+                progress = True
+        elif (
+            progress is False and
+            b_val - a_val == len(unflag_b - unflag_a)
+        ): 
+
+            if self.flag_unsafe_tiles(unflag_b - unflag_a): 
+                progress = True
+            
+            if self.add_safe_tiles(unflag_a - unflag_b): 
+                progress = True
+
+        return progress
+            
+
     def set_determination(self): 
+        # not wsorking it is worng, it can find 1-2 but not reverse or etc idk
         l = len(self.unsure_frontier.copy())
 
         for i in range(l):
@@ -121,27 +155,8 @@ class My_AI():
             for j in range(i + 1, l): 
                 tile_b = self.unsure_frontier[j]
                 if self.check_pair(tile_a, tile_b): 
-                    ax, ay = tile_a 
-                    bx, by = tile_b
-
-                    flag_a, unflag_a = self.add_neighbors(ax, ay) 
-                    flag_b, unflag_b = self.add_neighbors(bx, by)
-
-                    a_val = int(self.board[ax][ay]) - len(flag_a) 
-                    b_val = int(self.board[bx][by]) - len(flag_b) 
-
-                    # print(f'Checking: {a_val} - {b_val} = {unflag_a - unflag_b}') 
-                    if (
-                        a_val - b_val == len(unflag_a - unflag_b)
-                        and a_val - b_val != 0 
-                    ):  
-                        #self.print_board()
-                        #print(f'Pair: {tile_a}, {tile_b} found set:')
-                        #print(f'Unsafe tiles: {unflag_a - unflag_b}') 
-                        #print(f'Safe tiles: {unflag_b - unflag_a}')
-                        self.flag_unsafe_tiles(unflag_a - unflag_b) 
-                        self.add_safe_tiles(unflag_b - unflag_a) 
-                        return True
+                    if self.set_pairs(tile_a, tile_b): 
+                        return True 
 
         return False
     
@@ -284,7 +299,7 @@ class My_AI():
             self.unsure_frontier.append((self.cur_x, self.cur_y))
 
         while len(self.mines) != self.mines_count: 
-            # self.print_board() 
+            #self.print_board() 
             # // -------------------------------------
             # Deterministic -> find safe tiles based on flagged + unflagged neighbors
             if self.safe_frontier: 
@@ -313,10 +328,15 @@ class My_AI():
 
                         # GOAL: create different mine arrangements and find probability 
 
+
+                        # doesn't work sometimes, chooses a tile that is already played 
+                        #self.print_board()
                         tiles_ = list(self.tiles) 
+                        #print(f'Random tiles choose: {tiles_}')
 
                         corners = [] 
                         edges = []
+                        # something adds the random move twice 
                         for i in tiles_:
                             if (
                                 (i[0] == self.row - 1 and i[1] == self.col - 1) or
@@ -333,10 +353,11 @@ class My_AI():
                         elif edges: 
                             random_ = random.choice(edges) 
                         else: 
-                            random_ = random.choice(list(self.tiles)) 
-                            
-                        print(f'Playing random move: {random_}') 
-                        self.safe_frontier.append(random_) 
+                            random_ = random.choice(tiles_)
+
+                        #self.print_board() 
+                        #print(f'Playing random move: {random_}') 
+                        self.add_safe_tiles([random_])
                         continue 
         
 
