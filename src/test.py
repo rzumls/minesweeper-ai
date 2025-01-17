@@ -114,13 +114,14 @@ def csp(grid, frontier):
 
 # // --------------------------------------------------------------
 # PROBABILITY WORKS - IMPLEMEN WITH MINESWEEPER CAN JUST USE THIS 
-grid = [[ 0,   0,   1, ' '],
-        [ 1,   1,   2, ' '],
-        [' ', ' ', ' ', ' '],
+grid = [[' ', ' ', 1],
+        [' ', ' ', 2],
+        [ 1,   3, 'F'],
+        [ 0,   2, 'F']
 ]
 
 n, m = len(grid), len(grid[0]) 
-unsure = [(0,2), (1,0), (1,1), (1,2)]
+unsure = [(0, 2), (1,2), (2,0), (2,1)] 
 
 def get_edge_cells(frontier): 
     edge_cells = [] 
@@ -170,7 +171,11 @@ def valid_mine(grid, mine):
     
     return True 
 
-def valid_arrangement(grid, frontier): 
+total_mines = 3 # need to add count for mines in case > mines left 
+def valid_arrangement(grid, frontier, count): 
+    if count > total_mines: 
+        return False 
+        
     for tile in frontier: 
         i, j = tile 
         flag_c, _ = add_((i, j))
@@ -190,11 +195,11 @@ def mine_arrangements(unsure_):
     # WIP -- modify for number of mines left 
     arrangements = set() 
 
-    def make_arrangements(grid, mines, idx):
+    def make_arrangements(grid, mines, count, idx):
         grid_ = grid.copy() 
 
         if idx == len(mines):  
-            if valid_arrangement(grid_, unsure): 
+            if valid_arrangement(grid_, unsure, count): 
                 arrangements.add(tuple(mines)) 
         else: 
             x, y = edge_cells[idx] 
@@ -206,14 +211,14 @@ def mine_arrangements(unsure_):
             # technically, does get valid mine placements 
             # however, some tiles with values may not have mines 
             if valid_mine(grid_, (x, y)): 
-                make_arrangements(grid_, mines, idx + 1) 
+                make_arrangements(grid_, mines, count + 1, idx + 1) 
             
             grid[x][y] = ' ' 
             mines[idx] = False
             # try to not place mine here 
-            make_arrangements(grid_, mines, idx + 1) 
+            make_arrangements(grid_, mines, count, idx + 1) 
     
-    make_arrangements(grid, [False] * len(edge_cells), 0) 
+    make_arrangements(grid, [False] * len(edge_cells), 0, 0) 
 
     return arrangements
 
@@ -227,6 +232,7 @@ for i in edge_cells:
 
 total = len(x) 
 total_arrangements = 0 
+
 for arr in x: 
     mines_count = 0
 
@@ -234,13 +240,15 @@ for arr in x:
         if arr[i] == True: 
             mines_count += 1
 
-    prob = comb(465, (99 - mines_count))
+    prob = comb(480 - 25, (99 - mines_count))
     total_arrangements += prob 
 
     for j in range(len(arr)):
         if arr[j] == True: 
             mines_prob[edge_cells[j]] += prob
 
+# to get n for prob, total tiles - edge_cells 
+# since all discovered tiles are already removed from tile set
 
 for k, v in mines_prob.items(): 
     print(f'{k}: {v / total_arrangements * 100:2f}')

@@ -1,5 +1,6 @@
 from itertools import product, combinations
 from collections import deque
+from math import comb
 from Constants import *
 import numpy as np 
 import random
@@ -31,7 +32,7 @@ class My_AI():
                     print(f'[{items}]', end = "") 
                 print() 
     
-    def add_neighbors(self, x, y): 
+    def add_neighbors(self, x, y, board): 
         flagged = set()
         unflagged = set()
 
@@ -43,9 +44,9 @@ class My_AI():
                 row_dir >= 0 and row_dir < self.row and 
                 col_dir >= 0 and col_dir < self.col
             ): 
-                if self.board[row_dir][col_dir] == Constants_.SPACE: 
+                if board[row_dir][col_dir] == Constants_.SPACE: 
                     unflagged.add((row_dir, col_dir))
-                elif self.board[row_dir][col_dir] == Constants_.FLAG: 
+                elif board[row_dir][col_dir] == Constants_.FLAG: 
                     flagged.add((row_dir, col_dir)) 
         
         return flagged, unflagged
@@ -86,7 +87,7 @@ class My_AI():
     def check_unsafe_tiles(self): 
         progress = False 
         for x, y in self.unsure_frontier.copy() : 
-            flag, unflag = self.add_neighbors(x, y) 
+            flag, unflag = self.add_neighbors(x, y, self.board) 
 
             if (
                 len(flag) + len(unflag) == int(self.board[x][y]) and
@@ -118,8 +119,8 @@ class My_AI():
         ax, ay = a
         bx, by = b
 
-        flag_a, unflag_a = self.add_neighbors(ax, ay) 
-        flag_b, unflag_b = self.add_neighbors(bx, by)
+        flag_a, unflag_a = self.add_neighbors(ax, ay, self.board) 
+        flag_b, unflag_b = self.add_neighbors(bx, by, self.board)
 
         a_val = int(self.board[ax][ay]) - len(flag_a) 
         b_val = int(self.board[bx][by]) - len(flag_b)
@@ -147,15 +148,16 @@ class My_AI():
             
 
     def set_determination(self): 
-        # not wsorking it is worng, it can find 1-2 but not reverse or etc idk
         l = len(self.unsure_frontier.copy())
 
         for i in range(l):
             tile_a = self.unsure_frontier[i] 
             for j in range(i + 1, l): 
                 tile_b = self.unsure_frontier[j]
-                if self.check_pair(tile_a, tile_b): 
+                if self.check_pair(tile_a, tile_b):     
+                    #print(f'Checking pairs: {tile_a}, {tile_b}')
                     if self.set_pairs(tile_a, tile_b): 
+                        #print(f'{tile_a}, {tile_b} successful')
                         return True 
 
         return False
@@ -193,7 +195,7 @@ class My_AI():
         total_neighbors = []
 
         for tile in group: 
-            flag, unflag = self.add_neighbors(tile[0], tile[1]) 
+            flag, unflag = self.add_neighbors(tile[0], tile[1], self.board) 
             flag_count = len(flag) 
             unflag = sorted(unflag)
 
@@ -280,6 +282,7 @@ class My_AI():
             elif size_combo != 2: 
                 subgroups_ = self.get_subgroups(group, 2)
                 for group_ in subgroups_: 
+                    #print(f'Checking subgroup_2: {group_}')
                     if self.csp(group_, 2): 
                         return True
 
@@ -287,13 +290,160 @@ class My_AI():
                 return True 
             
         return False
+    
+    def get_edge_cells(self, frontier): 
+        edge_cells = [] 
+
+        for tile in frontier: 
+            x, y = tile 
+
+            for dir in self.directions: 
+                xd, yd = x + dir[0], y + dir[1] 
+
+                if (
+                    xd >= 0 and xd < self.row and 
+                    yd >= 0 and yd < self.col and 
+                    self.board[xd][yd] == ' '
+                ): 
+                    if (xd, yd) not in edge_cells: 
+                        edge_cells.append((xd, yd)) 
+
+        return edge_cells
+
+    def num_neighbors(self, tile): 
+        x, y = tile
+        neighbors = [] 
+
+        for d in self.directions: 
+            xd, yd = x + d[0], y + d[1] 
+
+            if ( 
+                xd >= 0 and xd < self.row and
+                yd >= 0 and yd < self.col and 
+                self.board[xd][yd].isdigit()
+            ): 
+                if self.board[xd][yd] not in neighbors: 
+                    neighbors.append((xd, yd)) 
         
+        return neighbors 
+
+    def valid_mine(self, grid, mine): 
+        neighbors = self.num_neighbors(mine)
+
+        for tile in neighbors: 
+            x, y = tile 
+            flag_count, _ = self.add_neighbors(x, y, grid)
+            if len(flag_count) > int(grid[tile[0]][tile[1]]):
+                return False 
+        
+        return True 
+    
+    def valid_arrangement(self, grid, count): 
+        if count + len(self.mines) > self.mines_count: 
+            return False
+        
+        for tile in self.unsure_frontier: 
+            x, y = tile
+            flag, _ = self.add_neighbors(x, y, grid)
+            if len(flag) != int(grid[x][y]): 
+                return False 
+        
+        return True 
+
+    def mine_arrangements(self, edge):
+        arrangements = set()
+
+        def make_arrangements(grid, mines, count, idx):
+            if idx == len(edge):
+                if self.valid_arrangement(grid, count):
+                    arrangements.add(tuple(mines))
+                return
+            
+            x, y = edge[idx]
+
+            grid[x][y] = 'F'
+            mines[idx] = True
+
+            if self.valid_mine(grid, (x, y)):
+                make_arrangements(grid, mines, count + 1, idx + 1)
+
+            grid[x][y] = ' '
+            mines[idx] = False
+            make_arrangements(grid, mines, count, idx + 1)
+
+        grid = [row[:] for row in self.board] 
+        make_arrangements(grid, [False] * len(edge), 0, 0)
+
+        return arrangements
+
+    
+    # memoization
+    # WIP - if multiple 0% moves, add all to safe frontier
+    def mines_probability(self): 
+        self.unsure_frontier = sorted(self.unsure_frontier)
+        edge_cells = self.get_edge_cells(self.unsure_frontier)[:25]
+
+        # print("Starting mine arrangement...\n")
+        arrangements = self.mine_arrangements(edge_cells) 
+        mines_prob = {k: 0 for k in edge_cells} 
+        # print("Finished mine arrangement...")
+ 
+        total_prob = 0 
+        # print(f'Starting probability calculation with edge cell size: {len(edge_cells)}...') 
+        for arr in arrangements: 
+            count = 0 
+            for i in range(len(arr)): 
+                if arr[i] == True: 
+                    count += 1
+            
+            probability = comb(
+                len(self.tiles) - len(edge_cells), 
+                (self.mines_count - count)
+            )  
+
+            if probability != 0:  
+                total_prob += probability
+            else: 
+                probability = 1
+            
+            for j in range(len(arr)): 
+                if arr[j] == True: 
+                    mines_prob[edge_cells[j]] += probability
+        
+        if total_prob == 0: 
+            total_prob = len(edge_cells) 
+
+        if len(mines_prob) != 0 and edge_cells: 
+            # print(f'Calculated mine probability with valid total probability...')
+            for k, v in mines_prob.items(): 
+                mines_prob[k] = round((v / total_prob) * 100, 3)
+
+            min_ = min(mines_prob.values()) 
+            choices = [i for i in mines_prob.keys() if mines_prob[i] == min_]
+
+            # if prob of multiple tiles are 0, open all those tiles
+            if min_ == 0 and len(choices) > 2: 
+                # print("Multiple safe mines... adding to safe frontier...\n")
+                self.add_safe_tiles(choices) 
+                return 'C', 0, 0 # C = continue 
+
+            random_ = random.choice(choices)
+            return 'P', random_, mines_prob[random_]
+        else:
+            # print(f'Could not calculate probable move, finding random move from tile set...')
+            # use random tile from tile set 
+            choices = list(self.tiles) 
+            random_ = random.choice(choices)
+
+            return 'P', random_, round(1 / len(self.tiles), 3) # P = play
+        
+
     def play_move(self, res): 
         self.res = res
         self.board[self.cur_x][self.cur_y] = self.res
 
         if self.res == Constants_.ZERO_TILE: 
-            _, unflag = self.add_neighbors(self.cur_x, self.cur_y)
+            _, unflag = self.add_neighbors(self.cur_x, self.cur_y, self.board)
             self.add_safe_tiles(unflag) 
         else: 
             self.unsure_frontier.append((self.cur_x, self.cur_y))
@@ -302,6 +452,7 @@ class My_AI():
             #self.print_board() 
             # // -------------------------------------
             # Deterministic -> find safe tiles based on flagged + unflagged neighbors
+            # print(f'Tiles in safe frontier: {len(self.safe_frontier)}\nTotal tiles left: {len(self.tiles)}')
             if self.safe_frontier: 
                 return self.play_safe_frontier() 
             elif self.check_unsafe_tiles(): 
@@ -309,6 +460,7 @@ class My_AI():
             else: 
                 # // -------------------------------------------------------
                 # Set Determination 
+                print("Using set determination...")
                 self.unsure_frontier = deque(sorted(self.unsure_frontier))
                 if self.set_determination(): 
                     continue
@@ -317,50 +469,22 @@ class My_AI():
                     # Constraint Satisfaction Problem
                     # get subgroups of 3, if more than 1 solution -> find commonalities
                     # else, get subgroups of 2 from the 3, helps for 1-1 mines or 1-2
+                    print("Using CSP...")
                     subgroups = self.get_subgroups(self.unsure_frontier, 3)
                     for group in subgroups: 
                         if self.csp(group, 3):
                             break
-                    else: 
-                        # // ---------------- WIP -------------------------
-                        # Smart Random 
-                        # corners best guess -> edges -> use probability 
+                    # // -------------------------------------------------------
 
-                        # GOAL: create different mine arrangements and find probability 
-
-
-                        # doesn't work sometimes, chooses a tile that is already played 
-                        #self.print_board()
-                        tiles_ = list(self.tiles) 
-                        #print(f'Random tiles choose: {tiles_}')
-
-                        corners = [] 
-                        edges = []
-                        # something adds the random move twice 
-                        for i in tiles_:
-                            if (
-                                (i[0] == self.row - 1 and i[1] == self.col - 1) or
-                                (i[0] == 0 and i[1] == 0) or
-                                (i[0] == 0 and i[1] == self.col - 1) or
-                                (i[0] == self.row - 1 and i[1] == 0)
-                            ):
-                                corners.append(i) 
-                            elif i[0] == self.row - 1 or i[1] == self.col - 1:
-                                edges.append(i)
-
-                        if corners: 
-                            random_ = random.choice(corners) 
-                        elif edges: 
-                            random_ = random.choice(edges) 
-                        else: 
-                            random_ = random.choice(tiles_)
-
-                        #self.print_board() 
-                        #print(f'Playing random move: {random_}') 
-                        self.add_safe_tiles([random_])
+                    print("Using probability...")
+                    move, safe_random, percent = self.mines_probability() 
+                    if move == 'C': 
                         continue 
-        
-
+                    else:
+                        # print(f'Playing safe random move: {safe_random} with {percent:.2f}% chance of being a mine\n') 
+                        self.add_safe_tiles([safe_random])
+                        continue
+                        
         self.add_safe_tiles(self.tiles) 
 
         if self.safe_frontier:

@@ -92,7 +92,6 @@ class Minesweeper:
         Return the first row, column, and the value of the [r][c] that is 
         an empty tile
         """
-
         start_r = random.randrange(self.x) 
         start_c = random.randrange(self.y) 
 
@@ -116,7 +115,7 @@ class Minesweeper:
         """ 
         """
         flag = False
-        self.create_board(8, 8, 10)
+        self.create_board(16, 30, 99) 
         x, y, res = self.set_board() 
         self.tiles.remove((x,y)) 
         # self.print_board()
