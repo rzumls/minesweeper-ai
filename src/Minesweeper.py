@@ -111,11 +111,11 @@ class Minesweeper:
             return True
         return False
 
-    def run_game(self, manual=True): 
+    def run_game(self, row, col, mines, manual=True): 
         """ 
         """
         flag = False
-        self.create_board(16, 30, 99) 
+        self.create_board(row, col, mines) 
         x, y, res = self.set_board() 
         self.tiles.remove((x,y)) 
         # self.print_board()
@@ -145,6 +145,7 @@ class Minesweeper:
                     if self.real_board[x][y] == Constants_.MINE: 
                         self.flagged_mines += 1
                     self.player_board[x][y] = Constants_.FLAG
+                # self.print_board(True)
             else:
                 self.game_over = True
 

@@ -1,7 +1,7 @@
 from itertools import product, combinations
 from collections import deque
 from math import comb
-from Constants import *
+from Constants import Constants_
 import numpy as np 
 import random
 
@@ -232,8 +232,7 @@ class My_AI():
     def solve_for_x(self, A, B, n): 
         """ 
         Produce combination of [0,1] for size n of A, B matrices
-        to find answer to A @ x = B.
-        Takes long since it finds every combinations and tries it
+        to find answer to A @ x = B
         """
         solution = [] 
 
@@ -248,7 +247,13 @@ class My_AI():
         return solution 
 
     def csp(self, group, size_combo): 
-        # self.print_board() 
+        """
+        Constraint Satisfaction Problem: turn the current group (size 2 or 3) into 
+        a system of equations, find whether there is a solution and if so: 
+            if there are more than 1 sols -> check commonalities, e.g x1 will always be false or true
+            if only 1 sol -> try to use subset of size 2: can solve 1-1 or 2-1 problems
+        
+        """
 
         tile_neighbor, total_neighbors = self.get_neighbor_dict(group)
 
@@ -258,16 +263,11 @@ class My_AI():
         solution = self.solve_for_x(A, B, n) 
 
         if solution: 
-            # self.print_board() 
-            sol_arr = np.vstack(solution) 
-            # print(f'Sol_arr shape: {sol_arr.shape}')
+            sol_arr = np.vstack(solution)
+            check = False
 
             if sol_arr.shape[0] != 1: 
                 equal_ = np.all(sol_arr == sol_arr[0], axis=0) 
-                check = False
-                # self.print_board()
-
-                # print(f'Solutions: {sol_arr}\n{equal_}') 
 
                 for i in range(len(equal_)): 
                     if equal_[i] == True: 
@@ -282,7 +282,6 @@ class My_AI():
             elif size_combo != 2: 
                 subgroups_ = self.get_subgroups(group, 2)
                 for group_ in subgroups_: 
-                    #print(f'Checking subgroup_2: {group_}')
                     if self.csp(group_, 2): 
                         return True
 
@@ -292,6 +291,10 @@ class My_AI():
         return False
     
     def get_edge_cells(self, frontier): 
+        """
+        Finds the edge cells of given frontier, such that the edge cells are the 
+        unmarked tiles of the current opened tile
+        """
         edge_cells = [] 
 
         for tile in frontier: 
@@ -311,6 +314,9 @@ class My_AI():
         return edge_cells
 
     def num_neighbors(self, tile): 
+        """ 
+        Find the "opened"/numbered neighbors of given tile
+        """
         x, y = tile
         neighbors = [] 
 
@@ -328,6 +334,9 @@ class My_AI():
         return neighbors 
 
     def valid_mine(self, grid, mine): 
+        """
+        Checks if current mine position (x, y) is valid based on the numbered tiles around it
+        """
         neighbors = self.num_neighbors(mine)
 
         for tile in neighbors: 
@@ -338,24 +347,37 @@ class My_AI():
         
         return True 
     
-    def valid_arrangement(self, grid, count): 
+    def valid_arrangement(self, grid, count, frontier): 
+        """
+        Checks if given arrangement is valid such that the count
+        of mines used in the current arrangement + current mines found < total mines
+        and checks if numbers of mines in an area is valid based on the numbered tiles.
+
+        @param list[list[str]] grid A 2D list representing the current minesweeper board for the AI
+        @param int count The number of mines used in the current arrangement
+        @param list[tuple[int, int]] frontier A list of (x, y) coordinates representing the current frontier
+        """
         if count + len(self.mines) > self.mines_count: 
             return False
         
-        for tile in self.unsure_frontier: 
+        for tile in frontier:
             x, y = tile
             flag, _ = self.add_neighbors(x, y, grid)
             if len(flag) != int(grid[x][y]): 
                 return False 
         
         return True 
-
-    def mine_arrangements(self, edge):
+    
+    def mine_arrangements(self, edge, frontier):
+        """
+        Create arrangement of edge cells based on given frontier
+        Computes 2^n, where n = length of edge cells
+        """
         arrangements = set()
 
         def make_arrangements(grid, mines, count, idx):
             if idx == len(edge):
-                if self.valid_arrangement(grid, count):
+                if self.valid_arrangement(grid, count, frontier):
                     arrangements.add(tuple(mines))
                 return
             
@@ -376,20 +398,17 @@ class My_AI():
 
         return arrangements
 
-    
-    # memoization
-    # WIP - if multiple 0% moves, add all to safe frontier
-    def mines_probability(self): 
-        self.unsure_frontier = sorted(self.unsure_frontier)
-        edge_cells = self.get_edge_cells(self.unsure_frontier)[:25]
+    def mines_probability(self, frontier): 
+        """
+        Get all arrangements of given edge cells (max 25) and compute their probability
+        """
+        edge_cells = self.get_edge_cells(frontier)[:25]
+        arrangements = self.mine_arrangements(edge_cells, frontier)
 
-        # print("Starting mine arrangement...\n")
-        arrangements = self.mine_arrangements(edge_cells) 
         mines_prob = {k: 0 for k in edge_cells} 
-        # print("Finished mine arrangement...")
- 
+
+    
         total_prob = 0 
-        # print(f'Starting probability calculation with edge cell size: {len(edge_cells)}...') 
         for arr in arrangements: 
             count = 0 
             for i in range(len(arr)): 
@@ -417,28 +436,58 @@ class My_AI():
             # print(f'Calculated mine probability with valid total probability...')
             for k, v in mines_prob.items(): 
                 mines_prob[k] = round((v / total_prob) * 100, 3)
-
-            min_ = min(mines_prob.values()) 
-            choices = [i for i in mines_prob.keys() if mines_prob[i] == min_]
-
-            # if prob of multiple tiles are 0, open all those tiles
-            if min_ == 0 and len(choices) > 2: 
-                # print("Multiple safe mines... adding to safe frontier...\n")
-                self.add_safe_tiles(choices) 
-                return 'C', 0, 0 # C = continue 
-
-            random_ = random.choice(choices)
-            return 'P', random_, mines_prob[random_]
         else:
             # print(f'Could not calculate probable move, finding random move from tile set...')
             # use random tile from tile set 
-            choices = list(self.tiles) 
-            random_ = random.choice(choices)
+            for k, v in mines_prob.items(): 
+                mines_prob[k] = round(1 / len(self.tiles, 3)) 
 
-            return 'P', random_, round(1 / len(self.tiles), 3) # P = play
-        
+        return mines_prob
+    
+    def separate_frontiers(self): 
+        """
+        Separates self.unsure_frontier into linked groups
+        """
+
+        frontiers = [] 
+        visited = set() 
+
+        def dfs(edges, idx, frontier, visited_n): 
+            if idx > len(edges) - 1: 
+                if frontier not in frontiers: 
+                    frontiers.append(frontier) 
+                return
+            
+            tile = edges[idx] 
+
+            _, nei = self.add_neighbors(tile[0], tile[1], self.board)
+            if len(visited_n) == 0: 
+                frontier.append(edges[idx]) 
+                visited_n.update(nei)
+            elif len(nei.intersection(visited_n)) >= 1: 
+                frontier.append(edges[idx]) 
+                visited_n.update(nei)
+            else: 
+                if frontier not in frontiers: 
+                    frontiers.append(frontier)
+
+                visited_n = set() 
+                visited_n.update(nei)
+                frontier = [edges[idx]] 
+            
+            dfs(edges, idx + 1, frontier, visited_n) 
+            
+        dfs(self.unsure_frontier, 0, [], visited) 
+
+        return frontiers 
 
     def play_move(self, res): 
+        """
+        Returns mine sweeper move in form of a tile: (x, y) 
+        Uses 4 layers to solve minesweeper grid: 
+        Deterministic, Set Determination, Constraint Satisfaction Problem, and Probability 
+        """
+
         self.res = res
         self.board[self.cur_x][self.cur_y] = self.res
 
@@ -449,42 +498,68 @@ class My_AI():
             self.unsure_frontier.append((self.cur_x, self.cur_y))
 
         while len(self.mines) != self.mines_count: 
-            #self.print_board() 
             # // -------------------------------------
-            # Deterministic -> find safe tiles based on flagged + unflagged neighbors
-            # print(f'Tiles in safe frontier: {len(self.safe_frontier)}\nTotal tiles left: {len(self.tiles)}')
+            # Deterministic
+            #   finds safe tiles based on flagged or unflagged neighbors
+            #   if unmarked tile == tile num -> those tiles are mines 
+            #   if unmarked + flagged == tile num -> those tiles are mines 
+
             if self.safe_frontier: 
                 return self.play_safe_frontier() 
             elif self.check_unsafe_tiles(): 
                     continue
             else: 
-                # // -------------------------------------------------------
+                # // ---------------------------------------------------------------------------
                 # Set Determination 
-                print("Using set determination...")
+                #   also subset elimination:
+                #       if tile a (unflag + flag) set - tile b (unflag + flag) = len(a) - len(b) 
+                #       the set of tiles in a - tiles of b -> (a \ b): flag all those tiles
+                #       the set of tiles in b  - tiles of a-> (b \ a): unflag those tiles
                 self.unsure_frontier = deque(sorted(self.unsure_frontier))
                 if self.set_determination(): 
                     continue
                 else:
-                    # // ---------------------------------------------------
+                    # // -----------------------------------------------------------------------
                     # Constraint Satisfaction Problem
-                    # get subgroups of 3, if more than 1 solution -> find commonalities
-                    # else, get subgroups of 2 from the 3, helps for 1-1 mines or 1-2
-                    print("Using CSP...")
+                    #   get subgroups of 3, if more than 1 solution -> find commonalities
+                    #   else, get subgroups of 2 from the original 3, helps for 1-1 mines or 1-2
+
                     subgroups = self.get_subgroups(self.unsure_frontier, 3)
+
                     for group in subgroups: 
                         if self.csp(group, 3):
-                            break
-                    # // -------------------------------------------------------
+                            continue
 
-                    print("Using probability...")
-                    move, safe_random, percent = self.mines_probability() 
-                    if move == 'C': 
+                    # // ----------------------------------------------------------------------------------------------
+                    # Probability Using Mine Arrangements
+                    #   get edge cells of the frontier -> the unmarked tiles of the "opened" tiles
+                    #   for each edge cell, create arrangement whether tile can be a mine or not 
+                    #   total arrangements = 2^len(edge cells)
+                    #
+                    #  Then create probability from:
+                    #  (total unbordered cells) Choose (total mines left - mines used in arrangement)
+                    #  Get sum of these probabilities from all arrangements and put into tile dict to get percentage of mine
+
+                    mines_prob = dict() 
+                    frontiers = self.separate_frontiers()
+
+                    for i in frontiers: 
+                        x = self.mines_probability(i)
+                        mines_prob = mines_prob | x
+                    
+                    if (not frontiers or not mines_prob):
+                        random_ = random.choice(list(self.tiles)) 
+                        self.add_safe_tiles([random_]) 
                         continue 
-                    else:
-                        # print(f'Playing safe random move: {safe_random} with {percent:.2f}% chance of being a mine\n') 
-                        self.add_safe_tiles([safe_random])
-                        continue
-                        
+                    
+                    min_ = min(mines_prob, key=mines_prob.get) 
+
+                    self.add_safe_tiles([min_])
+                    continue
+
+
+
+
         self.add_safe_tiles(self.tiles) 
 
         if self.safe_frontier:

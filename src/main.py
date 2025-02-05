@@ -1,31 +1,53 @@
 from Minesweeper import Minesweeper
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 import time 
 
-c = 0 
-start = time.time() 
-for i in range(1, 501):
+def run_minesweeper_game(row, col, mines):
     mine_sweep = Minesweeper()
-    if mine_sweep.run_game(False): 
-        c += 1
-        print(f'Won: {c} games Total: {i} games.\n')
+    return mine_sweep.run_game(row, col, mines, False)
 
-end = time.time() 
-print(f'Ran for: {end - start:.2f} seconds')
-print(f'Won games: {c}, win percentage: {c / 500 * 100:.2f}%')
+def test_ai(row, col, mines): 
+    wins = 0
+    lock = threading.Lock()  
+    start = time.time()
 
-# 1000 games 
-# 8x8 10 - 88.8%
-# 16x16 40 - 80.9% ran for 2021 secs
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(run_minesweeper_game, row, col, mines) for _ in range(1000)]
 
+        for i, future in enumerate(as_completed(futures), 1):
+            if future.result():
+                with lock:  
+                    wins += 1
+                    print(f'Won: {wins} games Total: {i} games.')
 
-# // ----------------------------------------------
-#                   WIP
-#     Separated frontiers for mine arrangements 
-#     Make some functions better time complexity
-# // ----------------------------------------------
+    end = round(time.time() - start, 2)
+    print(f'Ran for: {end} seconds')
+    print(f'Won games: {wins}, win percentage: {wins / 1000 * 100:.2f}%')
 
-# 500 games
-# 16x30 99 - 29.20% 
+    return wins, end
+    
+def main():
+    res = dict() 
+    print('Testing easy difficulty...')
+    wins, time = test_ai(8, 8, 10)
+
+    res['easy'] = (wins, time) 
+
+    print('Testing medium difficulty...')
+    wins, time = test_ai(16, 16, 40) 
+
+    res['med'] = (wins, time)
+
+    print('Testing hard difficulty...')
+    wins, time = test_ai(16, 30, 99)
+
+    res['hard'] = (wins, time) 
+
+    print(res) 
+    
+if __name__ == "__main__":
+    main()
 
 
 
