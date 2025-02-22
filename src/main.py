@@ -45,10 +45,17 @@ def main():
     res['hard'] = (wins, time) 
 
     print(res) 
-    
+
 if __name__ == "__main__":
     main()
 
+# AI score - 1000 games, (win percentage, time to solve 1000)
+
+# {
+# 'easy': (86.2%, 1637.93), 
+# 'med': (82.5%, 6657.39), 
+# 'hard': (34.2%, 10758.77)
+# }
 
 
 

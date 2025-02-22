@@ -1,9 +1,10 @@
 from itertools import product, combinations
 from collections import deque
 from math import comb
-from Constants import Constants_
+from Constants import Constants_, clear_console
 import numpy as np 
 import random
+import time
 
 class My_AI(): 
     def __init__(self, row, col, mines, board, start_x, start_y): 
@@ -26,7 +27,7 @@ class My_AI():
             ] 
     
     def print_board(self): 
-        # clear_console() 
+        clear_console() 
         for i in range(self.row): 
                 for items in self.board[i]: 
                     print(f'[{items}]', end = "") 
@@ -485,9 +486,10 @@ class My_AI():
         """
         Returns mine sweeper move in form of a tile: (x, y) 
         Uses 4 layers to solve minesweeper grid: 
-        Deterministic, Set Determination, Constraint Satisfaction Problem, and Probability 
+        Deterministic, Set Determinaton, Constraint Satisfaction Problem, and Probability 
         """
-
+        # self.print_board()
+        time.sleep(0.5)
         self.res = res
         self.board[self.cur_x][self.cur_y] = self.res
 
