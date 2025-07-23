@@ -1,6 +1,4 @@
 from Minesweeper import Minesweeper
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import threading
 import time 
 
 def test_ai(row, col, mines): 
