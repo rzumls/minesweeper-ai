@@ -4,27 +4,12 @@ from math import comb
 from Constants import Constants_, clear_console
 import numpy as np 
 import random
-<<<<<<< HEAD
-import time
-=======
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
 
 class My_AI(): 
     def __init__(self, row, col, mines, board, start_x, start_y): 
         self.row = row
         self.col = col
         self.board = board
-<<<<<<< HEAD
-        self.mines_count = mines
-        self.safe_frontier = deque() 
-        self.unsure_frontier = deque()  
-        self.mines = set()  
-        self.tiles = {(i,j) for i in range(self.row) for j in range(self.col)} 
-        self.tiles.remove((start_x, start_y)) 
-        self.cur_x = start_x
-        self.cur_y = start_y
-
-=======
         self.mines_count = mines # total mines count
         self.safe_frontier = deque() 
         self.unsure_frontier = deque()  
@@ -35,7 +20,6 @@ class My_AI():
         self.cur_x = start_x
         self.cur_y = start_y
         self.solved = False 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
 
         self.directions = [
             (0,1), (0,-1), (1,0), (-1,0), 
@@ -50,13 +34,10 @@ class My_AI():
                 print() 
     
     def add_neighbors(self, x, y, board): 
-<<<<<<< HEAD
-=======
         """"
         Returns the set of all neighbors of a given tile 
         categorized by flagged and unflagged neighbors
         """
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         flagged = set()
         unflagged = set()
 
@@ -76,18 +57,6 @@ class My_AI():
         return flagged, unflagged
 
     def play_safe_frontier(self): 
-<<<<<<< HEAD
-        tile = self.safe_frontier.popleft() 
-        #print(f'Playing tile: {tile}')
-        #print(f'Safe frontier: {self.safe_frontier}') 
-        self.tiles.remove(tile) 
-        #print(f'Removing tile: {tile}\n from: {self.tiles}')
-    
-        self.cur_x, self.cur_y = tile[0], tile[1] 
-        return tile 
-
-    def add_safe_tiles(self, neighbors): 
-=======
         """ 
         Returns the first appened tile in safe_frontier and removes it from total tile set, expected to be played 
         Updates self.cur_x and self.cur_y, awaits results from Minesweeper class to return the result of the tile played
@@ -109,17 +78,11 @@ class My_AI():
         Returns False is no tiles were added to safe_frontier
         """
         progress = False 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         for tile in neighbors: 
             if (
                 tile not in self.safe_frontier and
                 tile in self.tiles
             ): 
-<<<<<<< HEAD
-                self.safe_frontier.append(tile) 
-    
-    def flag_unsafe_tiles(self, mines): 
-=======
                 if tile in self.unsure_frontier: 
                     self.unsure_frontier.remove(tile) 
                     
@@ -134,18 +97,10 @@ class My_AI():
         """
 
         # TODO: remove from unsure frontier maybe 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         progress = False
 
         for mine in mines: 
             if (
-<<<<<<< HEAD
-                mine not in self.mines and
-                mine in self.tiles
-            ): 
-                self.mines.add(mine) 
-                self.tiles.remove(mine) 
-=======
                 mine not in self.found_mines and
                 mine in self.tiles and 
                 len(self.found_mines) < self.mines_count
@@ -156,21 +111,17 @@ class My_AI():
                 if mine in self.unsure_frontier: 
                     self.unsure_frontier.remove(mine) 
 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
                 self.board[mine[0]][mine[1]] = Constants_.FLAG
                 progress = True
 
         return progress
                 
     def check_unsafe_tiles(self): 
-<<<<<<< HEAD
-=======
         """ 
         Checks each tile in unsafe_tiles if it can be solved with a deterministic approach
         Usually called after finding an unsafe tile, opening a safe tile, or flagging a tile.
         """
 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         progress = False 
         for x, y in self.unsure_frontier.copy() : 
             flag, unflag = self.add_neighbors(x, y, self.board) 
@@ -189,15 +140,10 @@ class My_AI():
 
         return progress
     
-<<<<<<< HEAD
-    # are_consecutive maybe can replace this 
-    def check_pair(self, a, b): 
-=======
     def check_pair(self, a, b): 
         """ 
         Checks if tile a and tile b are next to each other depending on Up, Down, Left, or Right directions
         """
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         ax, ay = a
         if (
             (ax + 1, ay) == b or 
@@ -209,14 +155,11 @@ class My_AI():
         return False 
     
     def set_pairs(self, a, b): 
-<<<<<<< HEAD
-=======
         """ 
         Uses set determination for pairs a and b
         TODO: update description...
         """
 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         ax, ay = a
         bx, by = b
 
@@ -281,14 +224,6 @@ class My_AI():
 
         return False
     
-<<<<<<< HEAD
-    def get_subgroups(self, frontier, n): 
-        subgroups = combinations(frontier, n) 
-        res = [] 
-
-        for i in subgroups:
-            if self.are_consecutive(i):
-=======
     def are_shared(self, groups): 
         # need to intersect everything at once, not step by step it doesn't work like that 
         shared_set = set() # 
@@ -309,7 +244,6 @@ class My_AI():
 
         for i in subgroups:
             if self.are_consecutive(i) or self.are_shared(i): 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
                 res.append(i) 
         
         return res 
@@ -356,11 +290,7 @@ class My_AI():
     def solve_for_x(self, A, B, n): 
         """ 
         Produce combination of [0,1] for size n of A, B matrices
-<<<<<<< HEAD
-        to find answer to A @ x = B
-=======
         solve for x to A @ x = B, where @ means matrix multiplication
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         """
         solution = [] 
 
@@ -370,12 +300,7 @@ class My_AI():
             x = np.array(combo) 
             if np.array_equal(A @ x, B): 
                 solution.append(x) 
-<<<<<<< HEAD
-
-        x = np.vstack(solution) 
-=======
                 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         return solution 
 
     def csp(self, group, size_combo): 
@@ -386,10 +311,7 @@ class My_AI():
             if only 1 sol -> try to use subset of size 2: can solve 1-1 or 2-1 problems
         
         """
-<<<<<<< HEAD
-=======
         # TODO: understand this function again 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
 
         tile_neighbor, total_neighbors = self.get_neighbor_dict(group)
 
@@ -398,35 +320,20 @@ class My_AI():
         A, B = self.make_a_b(tile_neighbor, total_neighbors) 
         solution = self.solve_for_x(A, B, n) 
 
-<<<<<<< HEAD
-        if solution: 
-            sol_arr = np.vstack(solution)
-            check = False
-
-            if sol_arr.shape[0] != 1: 
-=======
         if solution != []: 
             sol_arr = np.vstack(solution)
             check = False
 
             if sol_arr.shape[0] != 1: # means that there are a system of linear equations
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
                 equal_ = np.all(sol_arr == sol_arr[0], axis=0) 
 
                 for i in range(len(equal_)): 
                     if equal_[i] == True: 
                         x, y = total_neighbors[i] 
-<<<<<<< HEAD
-                        if sol_arr[0][i] == 1: # means that this is a mine
-                            self.flag_unsafe_tiles([(x, y)]) 
-                            check = True
-                        elif sol_arr[0][i] == 0: # safe tiles 
-=======
                         if sol_arr[0][i] == 1: # in every combination, this tile position was always a mine
                             self.flag_unsafe_tiles([(x, y)]) 
                             check = True
                         elif sol_arr[0][i] == 0: # in every combination, this tile position was never a mine
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
                             self.add_safe_tiles([(x, y)]) 
                             check = True
 
@@ -466,11 +373,7 @@ class My_AI():
 
     def num_neighbors(self, tile): 
         """ 
-<<<<<<< HEAD
-        Find the "opened"/numbered neighbors of given tile
-=======
         Find the discovered/numbered neighbors of given tile
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         """
         x, y = tile
         neighbors = [] 
@@ -512,11 +415,7 @@ class My_AI():
         @param int count The number of mines used in the current arrangement
         @param list[tuple[int, int]] frontier A list of (x, y) coordinates representing the current frontier
         """
-<<<<<<< HEAD
-        if count + len(self.mines) > self.mines_count: 
-=======
         if count + len(self.found_mines) > self.mines_count: 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
             return False
         
         for tile in frontier:
@@ -561,11 +460,7 @@ class My_AI():
         """
         Get all arrangements of given edge cells (max 25) and compute their probability
         """
-<<<<<<< HEAD
-        edge_cells = self.get_edge_cells(frontier)[:25]
-=======
         edge_cells = self.get_edge_cells(frontier)[:25] 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
         arrangements = self.mine_arrangements(edge_cells, frontier)
 
         mines_prob = {k: 0 for k in edge_cells} 
@@ -644,8 +539,6 @@ class My_AI():
 
         return frontiers 
 
-<<<<<<< HEAD
-=======
     def prob_analysis(self): 
         mines_prob = {} 
         frontiers = self.separate_frontiers() # separates frontiers by connectedness or shared neighbors 
@@ -706,19 +599,10 @@ class My_AI():
         return 0 # means regular probability operations 
     
 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
     def play_move(self, res): 
         """
         Returns mine sweeper move in form of a tile: (x, y) 
         Uses 4 layers to solve minesweeper grid: 
-<<<<<<< HEAD
-        Deterministic, Set Determinaton, Constraint Satisfaction Problem, and Probability 
-        """
-        # self.print_board()
-        time.sleep(0.5)
-        self.res = res
-        self.board[self.cur_x][self.cur_y] = self.res
-=======
         - Deterministic, 
         - Set Determinaton, 
         - Constraint Satisfaction Problem,
@@ -730,7 +614,6 @@ class My_AI():
         self.res = res
         self.board[self.cur_x][self.cur_y] = self.res
         
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
 
         if self.res == Constants_.ZERO_TILE: 
             _, unflag = self.add_neighbors(self.cur_x, self.cur_y, self.board)
@@ -738,11 +621,7 @@ class My_AI():
         else: 
             self.unsure_frontier.append((self.cur_x, self.cur_y))
 
-<<<<<<< HEAD
-        while len(self.mines) != self.mines_count: 
-=======
         while len(self.found_mines) != self.mines_count: 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
             # // -------------------------------------
             # Deterministic
             #   finds safe tiles based on flagged or unflagged neighbors
@@ -760,10 +639,6 @@ class My_AI():
                 #       if tile a (unflag + flag) set - tile b (unflag + flag) = len(a) - len(b) 
                 #       the set of tiles in a - tiles of b -> (a \ b): flag all those tiles
                 #       the set of tiles in b  - tiles of a-> (b \ a): unflag those tiles
-<<<<<<< HEAD
-                self.unsure_frontier = deque(sorted(self.unsure_frontier))
-                if self.set_determination(): 
-=======
                 # print("Using set determination...")
                 self.unsure_frontier = deque(sorted(self.unsure_frontier))
 
@@ -771,7 +646,6 @@ class My_AI():
                     # TODO: sometimes accepts but doesn't find safe move,
                     # instead finds a mine tile or etc.., maybe fix 
                     #print("Found safe movie from set_determination...") 
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
                     continue
                 else:
                     # // -----------------------------------------------------------------------
@@ -781,11 +655,6 @@ class My_AI():
 
                     subgroups = self.get_subgroups(self.unsure_frontier, 3)
 
-<<<<<<< HEAD
-                    for group in subgroups: 
-                        if self.csp(group, 3):
-                            continue
-=======
                     found = False 
                     for group in subgroups: 
                         if self.csp(group, 3):
@@ -795,7 +664,6 @@ class My_AI():
                     if found or self.safe_frontier: 
                         #print("Found safe movie in CSP or safe frontier available") 
                         continue
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
 
                     # // ----------------------------------------------------------------------------------------------
                     # Probability Using Mine Arrangements
@@ -807,32 +675,6 @@ class My_AI():
                     #  (total unbordered cells) Choose (total mines left - mines used in arrangement)
                     #  Get sum of these probabilities from all arrangements and put into tile dict to get percentage of mine
 
-<<<<<<< HEAD
-                    mines_prob = dict() 
-                    frontiers = self.separate_frontiers()
-
-                    for i in frontiers: 
-                        x = self.mines_probability(i)
-                        mines_prob = mines_prob | x
-                    
-                    if (not frontiers or not mines_prob):
-                        random_ = random.choice(list(self.tiles)) 
-                        self.add_safe_tiles([random_]) 
-                        continue 
-                    
-                    min_ = min(mines_prob, key=mines_prob.get) 
-
-                    self.add_safe_tiles([min_])
-                    continue
-
-
-
-
-        self.add_safe_tiles(self.tiles) 
-
-        if self.safe_frontier:
-            return self.play_safe_frontier()
-=======
                     # TODO: add corner probabilities maybe 
                     # TODO: check if probability = 100, that means it is guaranteed mine 
                     
@@ -845,4 +687,3 @@ class My_AI():
             self.solved = True  
 
         return self.play_safe_frontier()
->>>>>>> 4a5e7bf (Fixed probability, added corner/edge checking for tiles)
