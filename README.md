@@ -55,18 +55,6 @@ The AI was run on thousands of generated boards to evaluate its win percentage a
 
 ---
 
-### Developer Notes
-
-- Trial 1: Initial solver implementation before Constraint Satisfaction Problem (CSP) improvements.  
-- Trial 2: CSP fixes added; probability logic requires further development.  
-- Trial 3: Larger scale runs prior to probability fix.  
-- Trial 4: Added probability fix, resulting in higher win rates, especially on easy boards.  
-- Trial 5: Final large scale test, demonstrating stable solver performance across difficulties.  
-- Future work: Improve probabilistic decision-making and optimize solver speed.
-
----
-
 # How to Run
 
-The main.py focuses on testing the solver on 3 difficulties based on the original Minesweeper game: 8x8 10 mines (easy), 16x16 40 mines (medium), and 30x16 99 mines (hard). The solver is given 5000 generated boards to
-solve for each category.
+Simply run the main.py file to begin testing the solver on the 3 difficulties. 
