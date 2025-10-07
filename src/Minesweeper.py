@@ -1,6 +1,9 @@
 from AI import My_AI
-from Constants import Constants_, clear_console
+from configs import Constants_, clear_console
 import random
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 
 class Minesweeper: 
     def __init__(self): 
@@ -126,6 +129,9 @@ class Minesweeper:
             else:
                 self.game_over = True
                 break
+        
+        AI_.visualize_board() 
+        plt.pause(0.3)
 
         return not self.game_over # if game_over if False -> AI won else AI lost
 

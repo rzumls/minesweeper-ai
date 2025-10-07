@@ -13,7 +13,7 @@ def test_ai(row, col, mines):
 
     end = round(time.time() - start, 2)
     print(f'Ran for: {end} seconds')
-    print(f'Won games: {wins}, win percentage: {wins / 1000 * 100:.2f}%')
+    print(f'Won games: {wins}, win percentage: {wins / 5000 * 100:.2f}%')
 
     return wins, end
     
@@ -37,7 +37,7 @@ def main():
 if __name__ == "__main__":
     main()
 
-# AI score - 1000 games, (win percentage, time to solve 1000)
+# AI score - 1000/5000 games, (win percentage, time to solve 1000/5000)
 
 # trial 1: pre csp fix 
 # difficulty: (win_percentage, time seconds)

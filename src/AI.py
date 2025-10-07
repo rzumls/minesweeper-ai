@@ -1,9 +1,11 @@
 from itertools import product, combinations
 from collections import deque
 from math import comb
-from Constants import Constants_, clear_console
+from configs import Constants_, clear_console
 import numpy as np 
-import random
+import random    
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 class My_AI(): 
     def __init__(self, row, col, mines, board, start_x, start_y): 
@@ -15,17 +17,53 @@ class My_AI():
         self.unsure_frontier = deque()  
         self.found_mines = set()  # set of found mine tiles 
         self.tiles = {(i,j) for i in range(self.row) for j in range(self.col)} 
-        #print(f'Start move: {start_x}, {start_y}')
         self.tiles.remove((start_x, start_y))
         self.cur_x = start_x
         self.cur_y = start_y
         self.solved = False 
+        self.visualize = False
 
         self.directions = [
             (0,1), (0,-1), (1,0), (-1,0), 
             (1,1), (1,-1), (-1,-1), (-1, 1)
             ] 
-    
+
+    def visualize_board(self):
+        rows, cols = self.row, self.col
+        ax = plt.gca()
+        ax.clear()
+        
+        for i in range(rows):
+            for j in range(cols):
+                cell = self.board[i][j]
+                
+                if (i, j) in self.found_mines:
+                    color = 'red'
+                elif (i, j) == (self.cur_x, self.cur_y):
+                    color = 'blue'
+                elif (i, j) in self.safe_frontier:
+                    color = 'green'
+                elif (i, j) in self.unsure_frontier:
+                    color = 'yellow'
+                else:
+                    color = 'white' if cell == Constants_.SPACE else 'lightgray'
+                
+                rect = patches.Rectangle((j, rows-i-1), 1, 1, facecolor=color, edgecolor='black')
+                ax.add_patch(rect)
+                
+             
+                if cell.isdigit():
+                    ax.text(j+0.5, rows-i-0.5, cell, ha='center', va='center', fontsize=12)
+        
+        ax.set_xlim(0, cols)
+        ax.set_ylim(0, rows)
+        ax.set_aspect('equal')
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        plt.pause(0.01) 
+
+        
     def print_board(self): 
         clear_console() 
         for i in range(self.row): 
@@ -613,6 +651,9 @@ class My_AI():
 
         self.res = res
         self.board[self.cur_x][self.cur_y] = self.res
+
+        if self.visualize: 
+            self.visualize_board()
         
 
         if self.res == Constants_.ZERO_TILE: 
