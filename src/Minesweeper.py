@@ -2,7 +2,7 @@ from AI import My_AI
 from configs import Constants_, clear_console
 import random
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+
 
 
 class Minesweeper: 

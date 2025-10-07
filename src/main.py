@@ -1,4 +1,4 @@
-from Minesweeper import Minesweeper
+from minesweeper import Minesweeper
 import time 
 
 def test_ai(row, col, mines): 
